@@ -22,80 +22,53 @@
 	.hidden scanline_t32cb16blend_arm
 	.global scanline_t32cb16blend_arm
 
+// uses r6, r7, lr
 
-/*
- * .macro pixel
- *
- * \DREG is a 32-bit register containing *two* original destination RGB565 
- *       pixels, with the even one in the low-16 bits, and the odd one in the
- *       high 16 bits.
- *
- * \SRC is a 32-bit 0xAABBGGRR pixel value, with pre-multiplied colors.
- *
- * \FB is a target register that will contain the blended pixel values.
- *
- * \ODD is either 0 or 1 and indicates if we're blending the lower or 
- *      upper 16-bit pixels in DREG into FB
- *
- *
- * clobbered: r6, r7, lr
- *
- */
+.macro pixel,   DREG, SRC, FB, OFFSET
 
-.macro pixel,   DREG, SRC, FB, ODD
-
-    // SRC = 0xAABBGGRR
+    // SRC = AARRGGBB
     mov     r7, \SRC, lsr #24           // sA
     add     r7, r7, r7, lsr #7          // sA + (sA >> 7)
     rsb     r7, r7, #0x100              // sA = 0x100 - (sA+(sA>>7))
 
 1:
 
-.if \ODD
+.if \OFFSET
 
     // red
-    mov     lr, \DREG, lsr #(16 + 11)
+    mov     lr, \DREG, lsr #(\OFFSET + 6 + 5)
     smulbb  lr, r7, lr
     mov     r6, \SRC, lsr #3
     and     r6, r6, #0x1F
     add     lr, r6, lr, lsr #8
-    cmp     lr, #0x1F
-    orrhs   \FB, \FB, #(0x1F<<(16 + 11))
-    orrlo   \FB, \FB, lr, lsl #(16 + 11)
+    orr     \FB, lr, lsl #(\OFFSET + 11)
 
         // green
-        and     r6, \DREG, #(0x3F<<(16 + 5))
+        and     r6, \DREG, #(0x3F<<(\OFFSET + 5))
         smulbt  r6, r7, r6
         mov     lr, \SRC, lsr #(8+2)
         and     lr, lr, #0x3F
         add     r6, lr, r6, lsr #(5+8)
-        cmp     r6, #0x3F
-        orrhs   \FB, \FB, #(0x3F<<(16 + 5))
-        orrlo   \FB, \FB, r6, lsl #(16 + 5)
+        orr     \FB, \FB, r6, lsl #(\OFFSET + 5)
 
             // blue
-            and     lr, \DREG, #(0x1F << 16)
+            and     lr, \DREG, #(0x1F << \OFFSET)
             smulbt  lr, r7, lr
             mov     r6, \SRC, lsr #(8+8+3)
             and     r6, r6, #0x1F
             add     lr, r6, lr, lsr #8
-            cmp     lr, #0x1F
-            orrhs   \FB, \FB, #(0x1F << 16)
-            orrlo   \FB, \FB, lr, lsl #16
+            orr     \FB, \FB, lr, lsl #\OFFSET
 
 .else
 
     // red
-    mov     lr, \DREG, lsr #11
+    mov     lr, \DREG, lsr #(6+5)
     and     lr, lr, #0x1F
     smulbb  lr, r7, lr
     mov     r6, \SRC, lsr #3
     and     r6, r6, #0x1F
     add     lr, r6, lr, lsr #8
-    cmp     lr, #0x1F
-    movhs   \FB, #(0x1F<<11)
-    movlo   \FB, lr, lsl #11
-
+    mov     \FB, lr, lsl #11
 
         // green
         and     r6, \DREG, #(0x3F<<5)
@@ -103,9 +76,7 @@
         mov     lr, \SRC, lsr #(8+2)
         and     lr, lr, #0x3F
         add     r6, lr, r6, lsr #(5+8)
-        cmp     r6, #0x3F
-        orrhs   \FB, \FB, #(0x3F<<5)
-        orrlo   \FB, \FB, r6, lsl #5
+        orr     \FB, \FB, r6, lsl #5
 
             // blue
             and     lr, \DREG, #0x1F
@@ -113,9 +84,7 @@
             mov     r6, \SRC, lsr #(8+8+3)
             and     r6, r6, #0x1F
             add     lr, r6, lr, lsr #8
-            cmp     lr, #0x1F
-            orrhs   \FB, \FB, #0x1F
-            orrlo   \FB, \FB, lr
+            orr     \FB, \FB, lr
 
 .endif
 
@@ -160,7 +129,7 @@ aligned:
     subs    r2, r2, #2
     blo     9f
 
-    // The main loop is unrolled twice and processes 4 pixels
+    // The main loop is unrolled twice and process 4 pixels
 8:  ldmia   r1!, {r4, r5}
     // stream the source
     pld     [r1, #32]
@@ -174,7 +143,7 @@ aligned:
     // stream the destination
     pld     [r0, #32]
     pixel   r3, r4, r12, 0
-    pixel   r3, r5, r12, 1
+    pixel   r3, r5, r12, 16
     // effectively, we're getting write-combining by virtue of the
     // cpu's write-back cache.
     str     r12, [r0, #-4]

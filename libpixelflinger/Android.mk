@@ -43,6 +43,10 @@ ifeq ($(TARGET_ARCH),arm)
 PIXELFLINGER_CFLAGS += -fstrict-aliasing -fomit-frame-pointer
 endif
 
+PIXELFLINGER_CFLAGS += \
+	-fvisibility=hidden \
+	-DPF_EXPORT="__attribute__((visibility(\"default\")))"
+
 LOCAL_SHARED_LIBRARIES := libcutils
 
 ifneq ($(TARGET_ARCH),arm)

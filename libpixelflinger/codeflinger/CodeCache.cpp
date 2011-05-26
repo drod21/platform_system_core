@@ -38,6 +38,7 @@ namespace android {
 
 // ----------------------------------------------------------------------------
 
+PF_EXPORT
 Assembly::Assembly(size_t size)
     : mCount(1), mSize(0)
 {
@@ -46,16 +47,19 @@ Assembly::Assembly(size_t size)
     ensureMbaseExecutable();
 }
 
+PF_EXPORT
 Assembly::~Assembly()
 {
     mspace_free(getMspace(), mBase);
 }
 
+PF_EXPORT
 void Assembly::incStrong(const void*) const
 {
     android_atomic_inc(&mCount);
 }
 
+PF_EXPORT
 void Assembly::decStrong(const void*) const
 {
     if (android_atomic_dec(&mCount) == 1) {

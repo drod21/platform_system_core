@@ -42,6 +42,7 @@ namespace android {
 #pragma mark ARMAssembler...
 #endif
 
+PF_EXPORT
 ARMAssembler::ARMAssembler(const sp<Assembly>& assembly)
     :   ARMAssemblerInterface(),
         mAssembly(assembly)

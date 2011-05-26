@@ -30,11 +30,13 @@ namespace android {
 
 // ----------------------------------------------------------------------------
 
+PF_EXPORT
 GGLAssembler::GGLAssembler(ARMAssemblerInterface* target)
     : ARMAssemblerProxy(target), RegisterAllocator(), mOptLevel(7)
 {
 }
 
+PF_EXPORT
 GGLAssembler::~GGLAssembler()
 {
 }
@@ -58,6 +60,7 @@ void GGLAssembler::reset(int opt_level)
 
 // ---------------------------------------------------------------------------
 
+PF_EXPORT
 int GGLAssembler::scanline(const needs_t& needs, context_t const* c)
 {
     int err = 0;

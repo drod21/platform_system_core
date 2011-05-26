@@ -781,6 +781,7 @@ void ggl_init_procs(context_t* c)
     ggl_init_clear(c);
 }
 
+PF_EXPORT
 void ggl_init_context(context_t* c)
 {
     memset(c, 0, sizeof(context_t));
@@ -806,6 +807,7 @@ void ggl_init_context(context_t* c)
     memcpy(c->ditherMatrix, gDitherMatrix, sizeof(gDitherMatrix));
 }
 
+PF_EXPORT
 void ggl_uninit_context(context_t* c)
 {
     ggl_uninit_scanline(c);
@@ -819,6 +821,7 @@ void ggl_uninit_context(context_t* c)
 
 using namespace android;
 
+PF_EXPORT
 ssize_t gglInit(GGLContext** context)
 {
     void* const base = malloc(sizeof(context_t) + 32);
@@ -834,6 +837,7 @@ ssize_t gglInit(GGLContext** context)
 	return 0;
 }
 
+PF_EXPORT
 ssize_t gglUninit(GGLContext* con)
 {
     GGL_CONTEXT(c, (void*)con);

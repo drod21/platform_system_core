@@ -40,7 +40,9 @@ endif
 
 ifeq ($(TARGET_ARCH),arm)
 # special optimization flags for pixelflinger
-PIXELFLINGER_CFLAGS += -fstrict-aliasing -fomit-frame-pointer
+PIXELFLINGER_CFLAGS += -fstrict-aliasing -fomit-frame-pointer \
+	-fexpensive-optimizations \
+	-ffast-math
 endif
 
 PIXELFLINGER_CFLAGS += \

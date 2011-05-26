@@ -14,7 +14,7 @@ PIXELFLINGER_SRC_FILES:= \
     codeflinger/GGLAssembler.cpp \
     codeflinger/load_store.cpp \
     codeflinger/blending.cpp \
-    codeflinger/texturing.cpp \
+    codeflinger/texturing.cpp.arm \
     codeflinger/disassem.c \
 	tinyutils/SharedBuffer.cpp \
 	tinyutils/VectorImpl.cpp \

@@ -500,6 +500,12 @@ int unwind_backtrace_with_ptrace(int tfd, pid_t pid, mapinfo *map,
     /* Set demand-save flags.  */
     saved_vrs.demand_save_flags = ~(_uw) 0;
 
+    union {
+        phase1_vrs *vrs;
+        _Unwind_Context *uc;
+    } saved_vrs_p;
+    saved_vrs_p.vrs = &saved_vrs;
+
     /* 
      * If the app crashes because of calling the weeds, we cannot pass the PC 
      * to the usual unwinding code as the EXIDX mapping will fail. 
@@ -508,7 +514,7 @@ int unwind_backtrace_with_ptrace(int tfd, pid_t pid, mapinfo *map,
      */
     if (get_eitp(saved_vrs.core.r[R_PC], pid, map, NULL) == NULL) { 
         *frame0_pc_sane = 0;
-        log_function ((_Unwind_Context *) &saved_vrs, pid, tfd, stack_level, 
+        log_function (saved_vrs_p.uc, pid, tfd, stack_level, 
                       map, sp_list, at_fault);
         saved_vrs.core.r[R_PC] = saved_vrs.core.r[R_LR];
         stack_level++;
@@ -539,10 +545,10 @@ int unwind_backtrace_with_ptrace(int tfd, pid_t pid, mapinfo *map,
         caches these in the exception header (UCB).  To avoid
         rewriting everything we make the virtual IP register point at
         the UCB.  */
-        _Unwind_SetGR((_Unwind_Context *)&saved_vrs, 12, (_Unwind_Ptr) ucbp);
+        _Unwind_SetGR(saved_vrs_p.uc, 12, (_Unwind_Ptr) ucbp);
 
         /* Call log function.  */
-        if (log_function ((_Unwind_Context *) &saved_vrs, pid, tfd, stack_level,
+        if (log_function (saved_vrs_p.uc, pid, tfd, stack_level,
                           map, sp_list, at_fault) != _URC_NO_REASON) {
             code = _URC_FAILURE;
             break;
@@ -552,7 +558,7 @@ int unwind_backtrace_with_ptrace(int tfd, pid_t pid, mapinfo *map,
         /* Call the pr to decide what to do.  */
         code = ((personality_routine_with_ptrace) UCB_PR_ADDR (ucbp))(
                 _US_VIRTUAL_UNWIND_FRAME | _US_FORCE_UNWIND, ucbp, 
-                (void *) &saved_vrs, pid);
+                 saved_vrs_p.uc, pid);
     /* 
      * In theory the unwinding process will stop when the end of stack is
      * reached or there is no unwinding information for the code address.

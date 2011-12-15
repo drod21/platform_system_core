@@ -41,19 +41,34 @@ static void setmtu(int s, struct ifreq *ifr, const char *mtu)
 }
 static void setdstaddr(int s, struct ifreq *ifr, const char *addr)
 {
-    init_sockaddr_in((struct sockaddr_in *) &ifr->ifr_dstaddr, addr);
+    union {
+        struct sockaddr_in *in;
+	struct sockaddr *sa;
+    } inaddr;
+    inaddr.sa = &ifr->ifr_dstaddr;
+    init_sockaddr_in(inaddr.in, addr);
     if(ioctl(s, SIOCSIFDSTADDR, ifr) < 0) die("SIOCSIFDSTADDR");
 }
 
 static void setnetmask(int s, struct ifreq *ifr, const char *addr)
 {
-    init_sockaddr_in((struct sockaddr_in *) &ifr->ifr_netmask, addr);
+    union {
+        struct sockaddr_in *in;
+        struct sockaddr *sa;
+    } inaddr;
+    inaddr.sa = &ifr->ifr_netmask;
+    init_sockaddr_in(inaddr.in, addr);
     if(ioctl(s, SIOCSIFNETMASK, ifr) < 0) die("SIOCSIFNETMASK");
 }
 
 static void setaddr(int s, struct ifreq *ifr, const char *addr)
 {
-    init_sockaddr_in((struct sockaddr_in *) &ifr->ifr_addr, addr);
+    union {
+        struct sockaddr_in *in;
+        struct sockaddr *sa;
+    } inaddr;
+    inaddr.sa = &ifr->ifr_addr;
+    init_sockaddr_in(inaddr.in, addr);
     if(ioctl(s, SIOCSIFADDR, ifr) < 0) die("SIOCSIFADDR");
 }
 
@@ -84,14 +99,26 @@ int ifconfig_main(int argc, char *argv[])
         if (ioctl(s, SIOCGIFADDR, &ifr) < 0) {
             perror(ifr.ifr_name);
             return -1;
-        } else
-            addr = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr;
+        } else {
+            union {
+                struct sockaddr_in *in;
+                struct sockaddr *sa;
+            } ad;
+	    ad.sa = &ifr.ifr_addr;
+            addr = ad.in->sin_addr.s_addr;
+	}
 
         if (ioctl(s, SIOCGIFNETMASK, &ifr) < 0) {
             perror(ifr.ifr_name);
             return -1;
-        } else
-            mask = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr;
+        } else {
+            union {
+                struct sockaddr_in *in;
+                struct sockaddr *sa;
+            } ad;
+	    ad.sa = &ifr.ifr_addr;
+            mask = ad.in->sin_addr.s_addr;
+	}
 
         if (ioctl(s, SIOCGIFFLAGS, &ifr) < 0) {
             perror(ifr.ifr_name);

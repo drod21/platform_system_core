@@ -2156,7 +2156,6 @@ void scanline_t32cb16blend(context_t* c)
     const int32_t v = (c->state.texture[0].shade.it0>>16) + y;
     uint32_t *src = reinterpret_cast<uint32_t*>(tex->data)+(u+(tex->stride*v));
 
-#if ((ANDROID_CODEGEN >= ANDROID_CODEGEN_ASM) && defined(__arm__))
 #if defined(__ARM_HAVE_NEON) && BYTE_ORDER == LITTLE_ENDIAN
     scanline_t32cb16blend_neon(dst, src, ct);
 #else  // defined(__ARM_HAVE_NEON) && BYTE_ORDER == LITTLE_ENDIAN
